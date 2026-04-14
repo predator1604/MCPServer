@@ -1,4 +1,5 @@
 ﻿using MCPServers.DB;
+using MCPServers.Models;
 using Octokit;
 
 namespace MCPServers.Services
@@ -51,7 +52,7 @@ namespace MCPServers.Services
 
                 return true;
             }
-            catch (Octokit.NotFoundException)
+            catch (NotFoundException)
             {
                 logger.LogWarning("Repository {Repo} not found.", repoName);
                 return false;
@@ -59,6 +60,67 @@ namespace MCPServers.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to delete repository from GitHub");
+                throw;
+            }
+        }
+
+        public async Task<RepoResponse> CreateRepo(CreateRepoRequest request)
+        {
+            var newRepo = new NewRepository(request.Name)
+            {
+                Description = request.Description,
+                Private = request.Visibility.Equals("private", StringComparison.OrdinalIgnoreCase),
+                AutoInit = request.AutoInit
+            };
+            try
+            {
+                var createdRepo = await gitHubClient.Repository.Create(newRepo);
+                return new RepoResponse
+                {
+                    Id = createdRepo.Id,
+                    Name = createdRepo.Name,
+                    Url = createdRepo.HtmlUrl
+                };
+            }
+            catch (ApiValidationException ex) when (ex.ApiError.Errors.Any(e => e.Code == "already_exists"))
+            {
+                logger.LogWarning("Repository {Repo} already exists.", request.Name);
+                throw new ArgumentException($"A repository with the name '{request.Name}' already exists.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to create repository on GitHub");
+                throw;
+            }
+        }
+
+        public async Task<RepoDetailsResponse> GetRepoDetails(string repoName)
+        {
+            try
+            {
+                var repo = await gitHubClient.Repository.Get(username, repoName);
+
+                var response =new RepoDetailsResponse
+                {
+                    Id = repo.Id,
+                    Name = repo.Name,
+                    FullName = repo.FullName,
+                    Description = repo.Description,
+                    Url = repo.HtmlUrl,
+                    IsPrivate = repo.Private,
+                    DefaultBranch = repo.DefaultBranch,
+                    StargazersCount = repo.StargazersCount,
+                    ForksCount = repo.ForksCount,
+                    OpenIssuesCount = repo.OpenIssuesCount,
+                    CreatedAt = repo.CreatedAt
+                };
+
+                await mcpServerDBService.UpsertRepoDetails(response);
+                return response;
+            }
+            catch 
+            {
+                logger.LogWarning("Repository {Owner}/{RepoName} was not found.", username, repoName);
                 throw;
             }
         }

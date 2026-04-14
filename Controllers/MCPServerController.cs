@@ -1,6 +1,8 @@
-﻿using MCPServers.Services;
+﻿using MCPServers.Models;
+using MCPServers.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Octokit;
 
 namespace MCPServers.Controllers
 {
@@ -17,9 +19,7 @@ namespace MCPServers.Controllers
             this.logger = logger;
         }
 
-        // Define all the GET APIs here
-        [HttpGet("GetRepos")]
-        [AllowAnonymous]
+        [HttpGet("GetAllRepos")]
         public async Task<IActionResult> GetAllRepos()
         {
             logger.LogInformation("GetRepos API called.");
@@ -39,11 +39,53 @@ namespace MCPServers.Controllers
             }
         }
 
-        // Define all the POST APIs here
+        [HttpGet("GetRepoDetails/{repoName}")]
+        public async Task<IActionResult> GetRepoDetails(string repoName)
+        {
+            logger.LogInformation("GetRepoDetails API called for {RepoName}", repoName);
 
-        // Define all the PATCH APIs here
+            try
+            {
+                var repo = await mcpServerService.GetRepoDetails(repoName);
+                return Ok(repo);
+            }
+            catch (NotFoundException)
+            {
+                return NotFound($"Repository '{repoName}' not found.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error fetching repo details for {RepoName}",repoName);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
 
-        // Define all the DELETE APIs here
+        [HttpPost("CreateRepo")]
+        public async Task<IActionResult> CreateRepo([FromBody] CreateRepoRequest request)
+        {
+            logger.LogInformation("CreateRepo API called for repo: {RepoName}", request.Name);
+
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                return BadRequest("Repository name is required.");
+            }
+
+            try
+            {
+                var createdRepo = await mcpServerService.CreateRepo(request);
+                return Created(createdRepo.Url, createdRepo);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error creating repository {RepoName}", request.Name);
+                return StatusCode(500, $"An error occurred while creating the repository: {ex.Message}");
+            }
+        }
+
         [HttpDelete("DeleteRepo/{repoName}")]
         public async Task<IActionResult> DeleteRepo(string repoName) {
             logger.LogInformation("DeleteRepo API called with id: {repoName}", repoName);

@@ -17,5 +17,6 @@ namespace MCPServers.DB
         }
 
         public IMongoCollection<GitHubCredential> GitHubCredentials =>  _database.GetCollection<GitHubCredential>("GitHubCredentials");
+        public IMongoCollection<RepoDetailsResponse> RepoDetails => _database.GetCollection<RepoDetailsResponse>("RepoDetails");
     }
 }

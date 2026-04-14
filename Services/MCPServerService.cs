@@ -41,5 +41,26 @@ namespace MCPServers.Services
             await StoreCredentialsInDB(gitHubClient.Credentials.GetToken(), username);
             return repos.Select(r => r.Name).ToList();
         }
+
+        public async Task<bool> DeleteRepo(string repoName)
+        {
+            try
+            {
+                logger.LogInformation("Attempting to delete {Owner}/{Repo} via Octokit", username, repoName);
+                await gitHubClient.Repository.Delete(username, repoName);
+
+                return true;
+            }
+            catch (Octokit.NotFoundException)
+            {
+                logger.LogWarning("Repository {Repo} not found.", repoName);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to delete repository from GitHub");
+                throw;
+            }
+        }
     }
 }

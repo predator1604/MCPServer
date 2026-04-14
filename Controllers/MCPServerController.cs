@@ -40,9 +40,26 @@ namespace MCPServers.Controllers
         }
 
         // Define all the POST APIs here
-        
+
         // Define all the PATCH APIs here
-        
+
         // Define all the DELETE APIs here
+        [HttpDelete("DeleteRepo/{repoName}")]
+        public async Task<IActionResult> DeleteRepo(string repoName) {
+            logger.LogInformation("DeleteRepo API called with id: {repoName}", repoName);
+            try
+            {
+                var result = await mcpServerService.DeleteRepo(repoName);
+                if (!result)
+                {
+                    return NotFound("Repository not found.");
+                }
+                return Ok("Repository deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while deleting the repository: {ex.Message}");
+            }
+        }
     }
 }

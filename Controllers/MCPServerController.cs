@@ -45,7 +45,7 @@ namespace MCPServers.Controllers
 
         // Define all the DELETE APIs here
         [HttpDelete("DeleteRepo/{repoName}")]
-        public async Task<IActionResult> DeleteRepo(string repoName) {
+        public async Task<IActionResult> DeleteRep(string repoName) {
             logger.LogInformation("DeleteRepo API called with id: {repoName}", repoName);
             try
             {

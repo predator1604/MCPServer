@@ -1,0 +1,48 @@
+﻿using MCPServers.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace MCPServers.Controllers
+{
+    [ApiController]
+    [Route("mcp/[controller]")]
+    public class MCPServerController : ControllerBase
+    {
+        private readonly IMCPServerService mcpServerService;
+        private readonly ILogger<MCPServerController> logger;
+
+        public MCPServerController(IMCPServerService mcpServerService, ILogger<MCPServerController> logger)
+        {
+            this.mcpServerService = mcpServerService;
+            this.logger = logger;
+        }
+
+        // Define all the GET APIs here
+        [HttpGet("GetRepos")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetRepos()
+        {
+            logger.LogInformation("GetRepos API called.");
+            try
+            {
+                var repos = await mcpServerService.GetRepos();
+                if (repos == null || !repos.Any())
+                {
+                    return NotFound("No repositories found.");
+                }
+                return Ok(repos);
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while fetching repositories from GitHub: {ex.Message}");
+            }
+        }
+
+        // Define all the POST APIs here
+        
+        // Define all the PATCH APIs here
+        
+        // Define all the DELETE APIs here
+    }
+}

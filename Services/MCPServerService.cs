@@ -34,7 +34,7 @@ namespace MCPServers.Services
             return success;
         }
 
-        public async Task<IEnumerable<string>> GetRepos()
+        public async Task<IEnumerable<string>> GetAllRepos()
         {
             logger.LogInformation("Fetching repos from the github.");
             var repos = await gitHubClient.Repository.GetAllForUser(username);

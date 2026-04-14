@@ -2,7 +2,7 @@
 {
     public interface IMCPServerService
     {
-        Task<IEnumerable<string>> GetRepos();
+        Task<IEnumerable<string>> GetAllRepos();
 
         Task<bool> DeleteRepo(string repoName);
     }

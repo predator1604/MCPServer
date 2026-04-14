@@ -20,12 +20,12 @@ namespace MCPServers.Controllers
         // Define all the GET APIs here
         [HttpGet("GetRepos")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetRepos()
+        public async Task<IActionResult> GetAllRepos()
         {
             logger.LogInformation("GetRepos API called.");
             try
             {
-                var repos = await mcpServerService.GetRepos();
+                var repos = await mcpServerService.GetAllRepos();
                 if (repos == null || !repos.Any())
                 {
                     return NotFound("No repositories found.");

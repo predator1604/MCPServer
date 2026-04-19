@@ -124,5 +124,79 @@ namespace MCPServers.Services
                 throw;
             }
         }
+
+        public async Task<IEnumerable<object>> GetBranches(string repoName)
+        {
+            var branches = await gitHubClient.Repository.Branch.GetAll(username, repoName);
+
+            return branches.Select(b => new {
+                b.Name,
+                CommitSha = b.Commit.Sha,
+                IsProtected = b.Protected
+            });
+        }
+
+        public async Task<object> GetBranchDetails(string repoName, string branch)
+        {
+            var branchDetails = await gitHubClient.Repository.Branch.Get(username, repoName, branch);
+
+            return new
+            {
+                branchDetails.Name,
+                branchDetails.Protected,
+                LatestCommit = new
+                {
+                    branchDetails.Commit.Sha,
+                    branchDetails.Commit.Url
+                }
+            };
+        }
+
+        public async Task<IReadOnlyList<PullRequest>> GetPullRequests(string repoName, ItemStateFilter state)
+        {
+            var request = new PullRequestRequest { State = state };
+            return await gitHubClient.PullRequest.GetAllForRepository(username, repoName, request);
+        }
+
+        public async Task<PullRequest> GetPullRequestDetails(string repoName, int number)
+        {
+            return await gitHubClient.PullRequest.Get(username, repoName, number);
+        }
+
+        public async Task<PullRequest> CreatePullRequest(string repoName, NewPullRequest request)
+        {
+            return await gitHubClient.PullRequest.Create(username, repoName, request);
+        }
+
+        public async Task<PullRequest> UpdatePullRequest(string repoName, int number, PullRequestUpdate request)
+        {
+            return await gitHubClient.PullRequest.Update(username, repoName, number, request);
+        }
+
+        public async Task<User> GetCurrentUser()
+        {
+            return await gitHubClient.User.Current();
+        }
+
+        public async Task<User> GetUserProfile(string username)
+        {
+            return await gitHubClient.User.Get(username);
+        }
+
+        public async Task<IReadOnlyList<GitHubCommit>> GetCommits(string repoName, string? sha = null, string? path = null)
+        {
+            var request = new CommitRequest
+            {
+                Sha = sha,   // Can be a branch name or a starting SHA
+                Path = path  // Filter commits that affected a specific file
+            };
+
+            return await gitHubClient.Repository.Commit.GetAll(username, repoName, request);
+        }
+
+        public async Task<GitHubCommit> GetCommitDetails(string repoName, string sha)
+        {
+            return await gitHubClient.Repository.Commit.Get(username, repoName, sha);
+        }
     }
 }
